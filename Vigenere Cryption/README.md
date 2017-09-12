@@ -1,4 +1,4 @@
-##TASK
+TASK
 
 1. Implement encryption (decryption) using Vigenere method
 2. Implement Kasiski examination for cryptoanalysis of encrypted text;
