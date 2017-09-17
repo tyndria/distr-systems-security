@@ -1,6 +1,6 @@
 package cipher;
 
-public class VigenereCipher implements SymbolCode{
+public class VigenereCipher implements Constants{
 	
 	public String encrypt(String text, String keyWord) {
 		StringBuilder encryptedText = new StringBuilder();
