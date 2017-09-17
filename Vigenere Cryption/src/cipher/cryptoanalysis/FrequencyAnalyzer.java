@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.ArrayUtils;
+
 import cipher.Constants;
 
 public class FrequencyAnalyzer implements Constants{
@@ -55,7 +57,7 @@ public class FrequencyAnalyzer implements Constants{
 		StringBuilder decryptedText = new StringBuilder(text.length());
 		for (int i = 0; i < text.length(); i ++) {
 			char letter = text.charAt(i);
-			if (letter != SPACE && letter != DOT && letter != COMMA) {
+			if (ArrayUtils.indexOf(SPECIAL_SYMBOLS, letter) == -1) {
 				int alphabetIndex = this.getAlphabetIndex(i);
 				decryptedText.append(alphabets.get(alphabetIndex).get(letter));
 			} else {
@@ -74,7 +76,7 @@ public class FrequencyAnalyzer implements Constants{
 		Map<Character, ObjectFrequency> frequencies = new HashMap<Character, ObjectFrequency>();
 		for (int i = 0; i < text.length(); i ++) {
 			char letter = text.charAt(i);
-			if (letter != SPACE && letter != DOT && letter != COMMA) {
+			if (ArrayUtils.indexOf(SPECIAL_SYMBOLS, letter) == -1) {
 				ObjectFrequency frequency;
 				if (frequencies.containsKey(letter)) {
 					frequency = frequencies.get(letter);
@@ -100,7 +102,6 @@ public class FrequencyAnalyzer implements Constants{
 				return difference > 0 ? 1 : -1;
 			});
 			mostUsedLetters = letterFrequencies.subList(0, 3).stream().map(item -> item.getObject().charAt(0)).collect(Collectors.toList());
-			//System.out.println(textLetterFrequencies.get(i).getLetter() + " " + textLetterFrequency + " " + i + " "+ mostUsedLetters);
 			letterMap.put(textLetterFrequencies.get(i).getObject().charAt(0), mostUsedLetters);
 		}
 		return letterMap;

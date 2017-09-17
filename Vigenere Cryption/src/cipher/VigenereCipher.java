@@ -1,4 +1,5 @@
 package cipher;
+import org.apache.commons.lang3.ArrayUtils;
 
 public class VigenereCipher implements Constants{
 	
@@ -40,12 +41,8 @@ public class VigenereCipher implements Constants{
 	}
 	
 	private static StringBuilder checkSpecSymbol(StringBuilder text, char a) {
-		if (a == SPACE) {
-			return text.append(" ");
-		} else if (a == DOT) {
-			return text.append(".");
-		} else if (a == COMMA) {
-			return text.append(",");
+		if(ArrayUtils.indexOf(SPECIAL_SYMBOLS, a) != -1) {
+			return text.append(a);
 		}
 		return null;
 	}

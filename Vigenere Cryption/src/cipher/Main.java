@@ -38,21 +38,22 @@ public class Main {
 		}
 		
 		String text = stringBuilder.toString().toLowerCase();
+		System.out.println("Initial first several words of text: \n" + text);
 		
 		VigenereCipher cipher = new VigenereCipher();
 		String keyWord = "mouse";
 		
 		String encryptedText = cipher.encrypt(text, keyWord);
+		System.out.println("Encrypted first several words of text: \n" + encryptedText);
 		String decryptedText = cipher.decrypt(encryptedText, keyWord);
-		System.out.println(text);
-		System.out.println(encryptedText);
+		System.out.println("Decrypted first several words of text: \n" + decryptedText);
 	    
 		int keywordLength = Kasiski.getKeywordLength(encryptedText);
-        System.out.println(keywordLength);
+        System.out.println("Keyword length (Kasiski test) " + keywordLength);
         
         FrequencyAnalyzer analyzer = new FrequencyAnalyzer(keywordLength, letterFrequencies);
         String decryptedText2 = analyzer.decrypt(encryptedText);
-        System.out.println(decryptedText2);
+        System.out.println("Decrypted first several words of text using frequencies analysis: \n" + decryptedText2);
 	}
 
 }
