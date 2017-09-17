@@ -63,7 +63,10 @@ public class FrequencyAnalyzer implements Constants{
 			char letter = text.charAt(i);
 			if (ArrayUtils.indexOf(SPECIAL_SYMBOLS, letter) == -1) {
 				int alphabetIndex = this.getAlphabetIndex(i);
-				decryptedText.append(alphabets.get(alphabetIndex).get(letter));
+				boolean isUpperCaseLetter = (int)letter < LOWER_ALPHABET_START_CODE; // check it letter is uppercase or not
+				char decryptedLetter = alphabets.get(alphabetIndex).get(Character.toLowerCase(letter));
+				decryptedLetter = isUpperCaseLetter ? Character.toUpperCase(decryptedLetter) : decryptedLetter;
+				decryptedText.append(decryptedLetter);
 			} else {
 				decryptedText.append(letter);
 			}
