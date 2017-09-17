@@ -23,6 +23,7 @@ public class FrequencyAnalyzer implements Constants{
 	
 	public String decrypt(String text) {
 		StringBuilder stringBuilder = new StringBuilder();
+		// List of decrypted letters maps for each piece of text encrypted with Caesar cipher
 		List<Map<Character, Character>> alphabets = new ArrayList();
 		for (int i = 0; i < keywordLength; i ++) {
 			stringBuilder = new StringBuilder();
@@ -31,10 +32,11 @@ public class FrequencyAnalyzer implements Constants{
 				stringBuilder.append(letter);
 			}
 			
-			// Process each piece of text
-			List<ObjectFrequency> textLettersFrequencies = this.countLettersFrequency(stringBuilder.toString());
+			String textPiece = stringBuilder.toString().toLowerCase();
+			// Process each piece of text encrypted with Caesar cipher
+			List<ObjectFrequency> textLettersFrequencies = this.countLettersFrequency(textPiece);
 			int possibleShift = this.analyzeLetterShift(this.findPossibleInitalLetters(textLettersFrequencies));
-			alphabets.add(this.decryptLetters(possibleShift, stringBuilder.toString()));
+			alphabets.add(this.decryptLetters(possibleShift, textPiece));
 		}
 		
 		return this.joinDecryptedTexts(alphabets, text);
@@ -44,10 +46,12 @@ public class FrequencyAnalyzer implements Constants{
 		Map<Character, Character> decryptedLetters = new HashMap();
 		for (int i = 0; i < text.length(); i ++) {
 			char letter = text.charAt(i);
-			if (!decryptedLetters.containsKey(letter)) {
-				int initialLetterCode = (int)letter - shift;
-				initialLetterCode = initialLetterCode < LOWER_ALPHABET_START_CODE ? initialLetterCode += ALPHABET_LENGTH : initialLetterCode;
-				decryptedLetters.put(letter, (char)initialLetterCode);
+			if (ArrayUtils.indexOf(SPECIAL_SYMBOLS, letter) == -1) {
+				if (!decryptedLetters.containsKey(letter)) {
+					int initialLetterCode = (int)letter - shift;
+					initialLetterCode = initialLetterCode < LOWER_ALPHABET_START_CODE ? initialLetterCode += ALPHABET_LENGTH : initialLetterCode;
+					decryptedLetters.put(letter, (char)initialLetterCode);
+				}
 			}
 		}
 		return decryptedLetters;
@@ -96,12 +100,15 @@ public class FrequencyAnalyzer implements Constants{
 		Map<Character, List<Character>> letterMap = new HashMap<Character,  List<Character>>();
 		for (int i = 0; i < textLetterFrequencies.size(); i ++) {
 			List<Character> mostUsedLetters = new ArrayList<Character>();
+			
 			double textLetterFrequency = textLetterFrequencies.get(i).getFrequency();
 			Collections.sort(letterFrequencies, (a, b) -> {
-				double difference = Math.abs(textLetterFrequency - ((ObjectFrequency)a).getFrequency()) - Math.abs(textLetterFrequency -((ObjectFrequency)b).getFrequency());
+				double difference = Math.abs(textLetterFrequency - ((ObjectFrequency)a).getFrequency()) - Math.abs(textLetterFrequency - ((ObjectFrequency)b).getFrequency());
 				return difference > 0 ? 1 : -1;
 			});
+			// Take the first 3 letters, which frequencies are the most close to the current letter form the piece of text
 			mostUsedLetters = letterFrequencies.subList(0, 3).stream().map(item -> item.getObject().charAt(0)).collect(Collectors.toList());
+			
 			letterMap.put(textLetterFrequencies.get(i).getObject().charAt(0), mostUsedLetters);
 		}
 		return letterMap;
@@ -112,7 +119,8 @@ public class FrequencyAnalyzer implements Constants{
 		map.keySet().forEach((encryptedLetter) -> {
 			map.get(encryptedLetter).forEach((possibleInitalLetter) -> {
 				int shift = (int)encryptedLetter - possibleInitalLetter;
-				shift = shift < 0 ? shift + 26: shift;
+				shift = shift < 0 ? shift + ALPHABET_LENGTH: shift;
+				
 				if (mostUsedShift.containsKey(shift)) {
 					ObjectFrequency existedShift = mostUsedShift.get(shift);
 					existedShift.increaseOccuranceNumber();

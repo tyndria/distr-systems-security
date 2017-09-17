@@ -37,7 +37,7 @@ public class Main {
 			System.out.println(e.getMessage());
 		}
 		
-		String text = stringBuilder.toString().toLowerCase();
+		String text = stringBuilder.toString();
 		System.out.println("Initial first several words of text: \n" + text);
 		
 		VigenereCipher cipher = new VigenereCipher();
