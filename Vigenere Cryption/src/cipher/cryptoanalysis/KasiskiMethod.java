@@ -22,6 +22,7 @@ public class KasiskiMethod {
         }
         Set<Entry<Integer, Integer>> entrySet = gcdFrequency.entrySet();
         List<Entry<Integer, Integer>> sorted = entrySet.stream().sorted((a, b) -> b.getValue() - a.getValue()).collect(Collectors.toList());
+        System.out.println("Possible keyword length: " + sorted.subList(0, Math.min(5, sorted.size())));
         return sorted.get(0).getKey();
     }
     
