@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.Scanner;
 
 import cipher.cryptoanalysis.FrequencyAnalyzer;
-import cipher.cryptoanalysis.Kasiski;
+import cipher.cryptoanalysis.KasiskiMethod;
 import cipher.cryptoanalysis.ObjectFrequency;
 
 public class Main {
@@ -41,6 +41,7 @@ public class Main {
 		System.out.println("Initial first several words of text: \n" + text);
 		
 		VigenereCipher cipher = new VigenereCipher();
+		KasiskiMethod kasiskiMethod = new KasiskiMethod();
 		String keyWord = "mouse";
 		
 		String encryptedText = cipher.encrypt(text, keyWord);
@@ -48,7 +49,7 @@ public class Main {
 		String decryptedText = cipher.decrypt(encryptedText, keyWord);
 		System.out.println("Decrypted first several words of text: \n" + decryptedText);
 	    
-		int keywordLength = Kasiski.getKeywordLength(encryptedText);
+		int keywordLength = kasiskiMethod.getKeywordLength(encryptedText);
         System.out.println("Keyword length (Kasiski test) " + keywordLength);
         
         FrequencyAnalyzer analyzer = new FrequencyAnalyzer(keywordLength, letterFrequencies);
