@@ -22,23 +22,25 @@ public class FrequencyAnalyzer implements Constants{
 	}
 	
 	public String decrypt(String text) {
-		StringBuilder stringBuilder = new StringBuilder();
+		StringBuilder textPieceBuilder = new StringBuilder();
+		StringBuilder keywordBuilder = new StringBuilder();
 		// List of decrypted letters maps for each piece of text encrypted with Caesar cipher
 		List<Map<Character, Character>> alphabets = new ArrayList();
 		for (int i = 0; i < keywordLength; i ++) {
-			stringBuilder = new StringBuilder();
+			textPieceBuilder = new StringBuilder();
 			for (int j = i; j < text.length(); j += (keywordLength)) {
 				char letter = text.charAt(j);
-				stringBuilder.append(letter);
+				textPieceBuilder.append(letter);
 			}
 			
-			String textPiece = stringBuilder.toString().toLowerCase();
+			String textPiece = textPieceBuilder.toString().toLowerCase();
 			// Process each piece of text encrypted with Caesar cipher
 			List<ObjectFrequency> textLettersFrequencies = this.countLettersFrequency(textPiece);
 			int possibleShift = this.analyzeLetterShift(this.findPossibleInitalLetters(textLettersFrequencies));
+			keywordBuilder.append((char)('a' + possibleShift));
 			alphabets.add(this.decryptLetters(possibleShift, textPiece));
 		}
-		
+		System.out.println(keywordBuilder.toString());
 		return this.joinDecryptedTexts(alphabets, text);
 	}
 	
