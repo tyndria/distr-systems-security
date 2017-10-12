@@ -1,0 +1,14 @@
+{
+  "name": "serpent-cypher",
+  "version": "1.0.0",
+  "description": "",
+  "main": "api/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Antonina Vertsinskaya",
+  "license": "ISC",
+  "dependencies": {
+    "bit-array": "^0.2.2"
+  }
+}
