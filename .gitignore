@@ -6,3 +6,6 @@ Vigenere Cryption/target
 Vigenere Cryption/pom.xml
 Serpent Cypher/node_modules/
 Serpent Cypher/.idea/
+Serpent Cypher/api/.project
+Serpent Cypher/api/bin
+Serpent Cypher/api/.classpath
