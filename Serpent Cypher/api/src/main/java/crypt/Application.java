@@ -1,6 +1,10 @@
-package serpent;
+package main.java.crypt;
 
-public class Main {
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class Application {
 
 	public static void main(String[] args) {
 		String text = "It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. \" +\r\n" + 
@@ -20,6 +24,7 @@ public class Main {
 		System.out.println(texts[3]);
 		System.out.println(cryptRound(texts, key)[3]);
 		System.out.println(decryptRound(texts, key)[3]);
+		SpringApplication.run(Application.class, args);
 	}
 	
 	static int[] cryptRound(int[] b, int key) {
