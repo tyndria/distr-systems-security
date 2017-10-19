@@ -159,7 +159,7 @@ class FrameAssistant extends JFrame implements ActionListener, Runnable{
 		
 		textAreaInput.setFont(font);
 		
-		buttonSend = new JButton("Send");
+		buttonSend = new JButton("Request Text");
 		buttonSend.addActionListener(this);
 		
 		panel.add(areaScrollPane);
@@ -212,13 +212,24 @@ class FrameAssistant extends JFrame implements ActionListener, Runnable{
 	            	    	sessionKey = this.decryptSessionKey(encryptedSessionKey, key.getPrivate());
 	            	    	System.out.println("Descrypted session key: " + sessionKey);
 	            	    	break;
-	            	    case 1: // Receive encrypted text
-	            	    	String text = inputStream.readUTF();
+	            	    case 1: // Receive encrypted text and text length
+	            	    	Message message = (Message)inputStream.readObject();
+	            	    	String text = message.getText();
+	            	    	String length = message.getTextLength();
 	            	    	int[] arr = Arrays.stream(text.substring(1, text.length()-1).split(","))
 	            	    		    .map(String::trim).mapToInt(Integer::parseInt).toArray();
 	            	    	arr = this.decrypt(arr, sessionKey);
 	            	    	byte[] bytes = this.convertToByteArray(arr);
-	            	    	System.out.println("Decrypted text: " + new String(bytes));
+	            	    	String decryptedText = new String(bytes);
+	            	    	
+	            	    	arr = Arrays.stream(length.substring(1, length.length()-1).split(","))
+	            	    		    .map(String::trim).mapToInt(Integer::parseInt).toArray();
+	            	    	arr = this.decrypt(arr, sessionKey);
+	            	    	bytes = this.convertToByteArray(arr);
+	            	    	int decryptedTextLength = this.parseEncryptedTextLength(new String(bytes));
+	            	    
+	            	    	System.out.println("Decrypted text: " + decryptedText.substring(0, decryptedTextLength));
+	            	    	textAreaInput.setText(decryptedText.substring(0, decryptedTextLength));
 	            	    	break;
 	        	    }
 				}
@@ -228,6 +239,9 @@ class FrameAssistant extends JFrame implements ActionListener, Runnable{
 				break;
 			} catch(IOException e) {
 				System.out.println("Stream was closed");
+			} catch (ClassNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
 		}
 	}
@@ -238,6 +252,18 @@ class FrameAssistant extends JFrame implements ActionListener, Runnable{
 			bytes[i] = (byte) integers[i];
 		}
 		return bytes;
+	}
+	
+	private int parseEncryptedTextLength(String length) {
+		StringBuilder builder = new StringBuilder();
+		for (int i = 0; i < length.length(); i ++) {
+			if (String.valueOf(length.charAt(i)).matches("[0-9]")) {
+				builder.append(length.charAt(i));
+			} else {
+				break;
+			}
+		}
+		return Integer.parseInt(builder.toString());
 	}
 	
 	private String decryptSessionKey(byte[] ecnryptedSessionKey, PrivateKey key) {
@@ -263,7 +289,19 @@ class FrameAssistant extends JFrame implements ActionListener, Runnable{
 			keys[i] = (int)binaryKeys[i];
 		}
 		
-		return this.decryptRound(texts, keys);
+		int[] decryptedText = new int[texts.length];
+		for (int i = 0; i < texts.length; i += 4) {
+			int[] partsToDecrypt = new int[4];
+			for (int j = i; j - i < 4; j ++) {
+				partsToDecrypt[j - i] = texts[j];
+			}
+			int[] decryptedTextParts = this.decryptRound(partsToDecrypt, keys);
+			for (int j = i; j - i < 4; j ++) {
+				decryptedText[j] = decryptedTextParts[j - i];
+			}
+		}
+		
+		return decryptedText;
     }
 	
 	private int[] decryptRound(int[] b, int[] keys) {

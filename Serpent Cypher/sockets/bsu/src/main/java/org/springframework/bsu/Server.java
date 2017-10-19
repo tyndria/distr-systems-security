@@ -77,7 +77,7 @@ public class Server{
     }
     
     public void run() {
-    	String text = "text that should be encrypted and decrypted correctly";
+    	String text = "text what should be encrypted and decrypted correctly, yes";
     	String key = "";
         try {
             while (clientSocket.isConnected()) {
@@ -85,19 +85,23 @@ public class Server{
 
             	  switch(messageType) {
 	            	  case 0: // Receive open RSA key (512 bits)
-	            		Message message = (Message)inputStream.readObject();
-	            	    System.out.println("Open RSA KEY: " + message.getKey());
-	            	    key = this.generateSessionKey(); // (128 bits)
-	            	    System.out.println("Session key: " + key);
-	            	    byte[] encryptedSessionKey = this.encryptSessionKey(key, message.getKey());
-	            	    outputStream.writeByte(0); 
-	            	    outputStream.writeUTF(Base64.getEncoder().encodeToString(encryptedSessionKey));
-	            	    outputStream.flush();
-	            	    break;
-	            	  case 1: // Encrypt and send text
+	            		  Message message = (Message)inputStream.readObject();
+	            		  System.out.println("Open RSA KEY: " + message.getKey());
+	            		  key = this.generateSessionKey(); // (128 bits)
+	            	   	  System.out.println("Session key: " + key);
+	            	   	  byte[] encryptedSessionKey = this.encryptSessionKey(key, message.getKey());
+	            	   	  outputStream.writeByte(0); 
+	            	   	  outputStream.writeUTF(Base64.getEncoder().encodeToString(encryptedSessionKey));
+	            	   	  outputStream.flush();
+	            	   	  break;
+	            	  case 1: // Encrypt and send text and text length
 	            		  int[] encryptedText = this.encrypt(text, key);
+	            		  int[] encryptedLength = this.encrypt(text.length() + "", key);
+	            		  Message messageToSend = new Message();
+	            		  messageToSend.setText(Arrays.toString(encryptedText));
+	            		  messageToSend.setTextLength(Arrays.toString(encryptedLength));
 	            		  outputStream.writeByte(1); 
-	            		  outputStream.writeUTF(Arrays.toString(encryptedText));
+	            		  outputStream.writeObject(messageToSend);
 	            		  outputStream.flush();
 	            		  break;
             	  }
@@ -133,15 +137,40 @@ public class Server{
     private int[] encrypt(String text, String key) {
     	byte[] binaryText = text.getBytes();
     	byte[] binaryKeys = key.getBytes();
-		int[] texts = new int[4];
 		int[] keys = new int[4];
 		
+		int bytesLength = this.getComplementedBytesLength(binaryText.length);
+		int[] encryptedText = new int[bytesLength];
+		int[] texts = new int[bytesLength];
+		
 		for (int i = 0; i < 4; i ++) {
-			texts[i] = (int)binaryText[i];
 			keys[i] = (int)binaryKeys[i];
 		}
 		
-		return cryptRound(texts, keys);
+		for (int i = 0; i < bytesLength; i ++) {
+			if (i < binaryText.length) {
+				texts[i] = (int)binaryText[i];
+			} else {
+				texts[i] = 100;
+			}
+		}
+		
+		for (int i = 0; i < bytesLength; i += 4) {
+			int[] partsToCrypt = new int[4];
+			for (int j = i; j - i < 4; j ++) {
+				partsToCrypt[j - i] = texts[j];
+			}
+			int[] encryptedTextParts = this.cryptRound(partsToCrypt, keys);
+			for (int j = i; j - i < 4; j ++) {
+				encryptedText[j] = encryptedTextParts[j - i];
+			}
+		}
+		
+		return encryptedText;
+    }
+    
+    private int getComplementedBytesLength(int length) {
+    	return length + (4 - length % 4);
     }
     
     private int[] cryptRound(int[] b, int keys[]) {
