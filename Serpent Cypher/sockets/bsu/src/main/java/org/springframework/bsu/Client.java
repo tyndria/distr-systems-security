@@ -59,7 +59,7 @@ class FrameAssistant extends JFrame implements ActionListener, Runnable{
 	KeyPairGenerator keyGen;
 	KeyPair key;
 	
-	Socket clientSocket = new Socket("192.168.100.5", 8092);
+	Socket clientSocket = new Socket("172.16.1.57", 8092);
 	ObjectOutputStream outputStream = new ObjectOutputStream(clientSocket.getOutputStream());
 	ObjectInputStream inputStream = new ObjectInputStream(clientSocket.getInputStream());
 	
@@ -218,18 +218,18 @@ class FrameAssistant extends JFrame implements ActionListener, Runnable{
 	            	    	String length = message.getTextLength();
 	            	    	int[] arr = Arrays.stream(text.substring(1, text.length()-1).split(","))
 	            	    		    .map(String::trim).mapToInt(Integer::parseInt).toArray();
-	            	    	arr = this.decrypt(arr, sessionKey);
-	            	    	byte[] bytes = this.convertToByteArray(arr);
+	            	    	arr = this.decrypt(this.reverseTextBlocks(arr), sessionKey);
+	            	    	byte[] bytes = this.convertToByteArray(this.reverseTextBlocks(arr));
 	            	    	String decryptedText = new String(bytes);
 	            	    	
 	            	    	arr = Arrays.stream(length.substring(1, length.length()-1).split(","))
 	            	    		    .map(String::trim).mapToInt(Integer::parseInt).toArray();
-	            	    	arr = this.decrypt(arr, sessionKey);
-	            	    	bytes = this.convertToByteArray(arr);
+	            	    	arr = this.decrypt(this.reverseTextBlocks(arr), sessionKey);
+	            	    	bytes = this.convertToByteArray(this.reverseTextBlocks(arr));
 	            	    	int decryptedTextLength = this.parseEncryptedTextLength(new String(bytes));
 	            	    
 	            	    	System.out.println("Decrypted text: " + decryptedText.substring(0, decryptedTextLength));
-	            	    	textAreaInput.setText(decryptedText.substring(0, decryptedTextLength));
+	            	    
 	            	    	break;
 	        	    }
 				}
@@ -281,6 +281,28 @@ class FrameAssistant extends JFrame implements ActionListener, Runnable{
 		return new String(dectyptedText);
 	}
 	
+	private int[] reverseTextBlocks(int[] blocks) {
+		if (blocks.length == 4) {
+			return blocks;
+		}
+		int[] reversedArray = new int[blocks.length];
+		int j = blocks.length - 1;
+		for (int i = 0; i < blocks.length; i += 4) {
+			int[] blocksToCopy = new int[4];
+			
+			for (int k = i; k - i < 4; k ++) {
+				blocksToCopy[k - i] = blocks[k];
+			}
+			
+			for (int k = 3; k >= 0; k --) {
+				reversedArray[j - k] = blocksToCopy[3 - k];
+			}
+			
+			j -= 4;
+		}
+		return reversedArray;
+	}
+	
 	private int[] decrypt(int[] texts, String key) {
     	byte[] binaryKeys = key.getBytes();
 		int[] keys = new int[4];
@@ -289,15 +311,29 @@ class FrameAssistant extends JFrame implements ActionListener, Runnable{
 			keys[i] = (int)binaryKeys[i];
 		}
 		
+		int randomInitVector = 109;
 		int[] decryptedText = new int[texts.length];
 		for (int i = 0; i < texts.length; i += 4) {
 			int[] partsToDecrypt = new int[4];
 			for (int j = i; j - i < 4; j ++) {
 				partsToDecrypt[j - i] = texts[j];
 			}
-			int[] decryptedTextParts = this.decryptRound(partsToDecrypt, keys);
+			
+			for(int k = 0; k < 32; k ++) {
+				this.decryptRound(partsToDecrypt, keys);
+			}
+			
+			// Cipher feed back mode
 			for (int j = i; j - i < 4; j ++) {
-				decryptedText[j] = decryptedTextParts[j - i];
+				if ((i + 4) >= (texts.length - 1)) { // last iteration
+					partsToDecrypt[j - i] = partsToDecrypt[j - i] ^ randomInitVector;
+				} else {
+					partsToDecrypt[j - i] = partsToDecrypt[j - i] ^ texts[j + 4];
+				}
+			}
+			
+			for (int j = i; j - i < 4; j ++) {
+				decryptedText[j] = partsToDecrypt[j - i];
 			}
 		}
 		

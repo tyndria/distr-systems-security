@@ -155,14 +155,28 @@ public class Server{
 			}
 		}
 		
+		int randomInitVector = 109;
 		for (int i = 0; i < bytesLength; i += 4) {
 			int[] partsToCrypt = new int[4];
 			for (int j = i; j - i < 4; j ++) {
 				partsToCrypt[j - i] = texts[j];
 			}
-			int[] encryptedTextParts = this.cryptRound(partsToCrypt, keys);
+			
+			// Cipher feed back mode
 			for (int j = i; j - i < 4; j ++) {
-				encryptedText[j] = encryptedTextParts[j - i];
+				if (i == 0) {
+					partsToCrypt[j - i] = partsToCrypt[j - i] ^ randomInitVector;
+				} else {
+					partsToCrypt[j - i] = partsToCrypt[j - i] ^ encryptedText[j - 4];
+				}
+			}
+			
+			for (int k = 0; k < 32; k ++) {
+				this.cryptRound(partsToCrypt, keys);
+			}
+			
+			for (int j = i; j - i < 4; j ++) {
+				encryptedText[j] = partsToCrypt[j - i];
 			}
 		}
 		
