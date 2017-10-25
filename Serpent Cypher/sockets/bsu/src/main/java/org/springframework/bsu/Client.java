@@ -6,15 +6,11 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.net.Socket;
 import java.net.SocketException;
 import java.security.KeyPair;
@@ -25,7 +21,6 @@ import java.util.Arrays;
 import java.util.Base64;
 
 import javax.crypto.Cipher;
-import javax.swing.BorderFactory;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -43,36 +38,29 @@ public class Client {
 	}
 }
 
-class FrameAssistant extends JFrame implements ActionListener, Runnable{
+class FrameAssistant extends JFrame implements ActionListener, Runnable, SBox{
 	private static final long serialVersionUID = 1L;
-	DefaultListModel<String> messageListModel;
 	String author;
-	JList<String> messageJList;
-	JTextArea textAreaInput;
+	JTextArea textNameInput, textViewOutput;
 	JButton buttonSend, buttonOk, buttonGenerateRSA;
 	Boolean isNewMessage;
-	JTextArea loginArea, passwordArea;
 	JPanel cardPanel, chatPanel, loginPanel, buttonPanel;
-	JLabel errorLabel; 
 	Font font = new Font("Verdana", Font.PLAIN, 20);
 	
 	KeyPairGenerator keyGen;
 	KeyPair key;
 	
-	Socket clientSocket = new Socket("172.16.1.57", 8092);
+	Socket clientSocket = new Socket("10.160.109.195", 8092);
 	ObjectOutputStream outputStream = new ObjectOutputStream(clientSocket.getOutputStream());
 	ObjectInputStream inputStream = new ObjectInputStream(clientSocket.getInputStream());
 	
 	public FrameAssistant(String s) throws FileNotFoundException, ClassNotFoundException, IOException {
 		super(s);
 		
-		errorLabel = new JLabel("Error");
-		errorLabel.setFont(font);
-		
 		cardPanel = new JPanel(new CardLayout());
 		
 		chatPanel = new JPanel(new BorderLayout());
-		chatPanel.add(createChatViewPanel(), BorderLayout.CENTER);
+		chatPanel.add(createTextViewPanel(), BorderLayout.CENTER);
 		chatPanel.add(createTextInputPanel(), BorderLayout.SOUTH);
 		
 		cardPanel.add(chatPanel);
@@ -116,18 +104,17 @@ class FrameAssistant extends JFrame implements ActionListener, Runnable{
 		return panel;
 	}
 	
-	private JPanel createChatViewPanel() {
+	private JPanel createTextViewPanel() {
 		JPanel panel = new JPanel();
 		
-		messageListModel = new DefaultListModel<String>();
-		messageJList = new JList<String>(messageListModel);
+		textViewOutput = new JTextArea(1, 10);
 		
-		messageJList.setFont(font);
-		
-		JScrollPane areaScrollPane = new JScrollPane(messageJList, 
-				JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, 
+		JScrollPane areaScrollPane = new JScrollPane(textViewOutput, 
+				JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, 
 				JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-		areaScrollPane.setPreferredSize(new Dimension(500, 350));
+		areaScrollPane.setPreferredSize(new Dimension(433, 300));
+		
+		textViewOutput.setFont(font);
 		panel.add(areaScrollPane);
 		
 		return panel;
@@ -140,24 +127,18 @@ class FrameAssistant extends JFrame implements ActionListener, Runnable{
 	     key = keyGen.generateKeyPair();
 	}
 	
-	private JPanel createFlowLayoutPanel(Component component) {
-		JPanel panel = new JPanel();
-		component.setFont(font);
-		panel.add(component);
-		return panel;
-	}
 	
 	private JPanel createTextInputPanel() {
 		JPanel panel = new JPanel();
 		
-		textAreaInput = new JTextArea(1, 15);
+		textNameInput = new JTextArea(1, 15);
 		
-		JScrollPane areaScrollPane = new JScrollPane(textAreaInput, 
+		JScrollPane areaScrollPane = new JScrollPane(textNameInput, 
 				JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, 
 				JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 		areaScrollPane.setPreferredSize(new Dimension(433, 50));
 		
-		textAreaInput.setFont(font);
+		textNameInput.setFont(font);
 		
 		buttonSend = new JButton("Request Text");
 		buttonSend.addActionListener(this);
@@ -176,7 +157,7 @@ class FrameAssistant extends JFrame implements ActionListener, Runnable{
 				outputStream.writeByte(1);
 				outputStream.flush();
 			} catch (SocketException e1) {
-				textAreaInput.setText("Server was closed");
+				textNameInput.setText("Server was closed");
 			} catch (IOException e1) {
 				System.out.println(e1.getMessage());
 			}
@@ -187,9 +168,9 @@ class FrameAssistant extends JFrame implements ActionListener, Runnable{
 				outputStream.writeByte(0);
 				outputStream.writeObject(message);
 				outputStream.flush();
-				textAreaInput.setText("");
+				textNameInput.setText("");
 			} catch (SocketException e1) {
-				textAreaInput.setText("Server was closed");
+				textNameInput.setText("Server was closed");
 			} catch (IOException e1) {
 				System.out.println(e1.getMessage());
 			} catch (NoSuchAlgorithmException e1) {
@@ -227,15 +208,14 @@ class FrameAssistant extends JFrame implements ActionListener, Runnable{
 	            	    	arr = this.decrypt(this.reverseTextBlocks(arr), sessionKey);
 	            	    	bytes = this.convertToByteArray(this.reverseTextBlocks(arr));
 	            	    	int decryptedTextLength = this.parseEncryptedTextLength(new String(bytes));
-	            	    
-	            	    	System.out.println("Decrypted text: " + decryptedText.substring(0, decryptedTextLength));
-	            	    
+	            	  
+	            	    	textViewOutput.setText(decryptedText.substring(0, decryptedTextLength));
 	            	    	break;
 	        	    }
 				}
 			} catch(SocketException e) {
 				System.out.println(e.getMessage());
-				textAreaInput.setText("Server was closed");
+				textNameInput.setText("Server was closed");
 				break;
 			} catch(IOException e) {
 				System.out.println("Stream was closed");
@@ -356,6 +336,19 @@ class FrameAssistant extends JFrame implements ActionListener, Runnable{
 		}
 		return b;
 	}
+	
+	private byte[] permutations(byte[] data, int round) {
+        byte[] permutationRow = inverseBoxes[round % 8]; 
+        byte[] output = new byte[16];
+        for(int i = 0; i < 16; i++) {
+            //Break signed-ness
+            int curr = data[i]&0xFF;
+            byte low4 = (byte)(curr>>>4);
+            byte high4 = (byte)(curr&0x0F);
+            output[i] = (byte) ((permutationRow[low4]<<4) ^ (permutationRow[high4]));
+        }
+        return output;
+    }
 	
 }
 
