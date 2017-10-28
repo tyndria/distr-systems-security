@@ -55,10 +55,11 @@ public class Server{
     }
 }
 
- class ConnectedClient extends Thread implements Runnable{
+ class ConnectedClient extends Thread implements Runnable, SBox{
     private Socket clientSocket;
     private ObjectInputStream inputStream;
     private ObjectOutputStream outputStream;
+    private CommonCryption common = new CommonCryption();
 
     public ConnectedClient(Socket s, ServerSocket serverSocket) throws IOException {
     	super();
@@ -171,9 +172,12 @@ public class Server{
 				}
 			}
 			
+			partsToCrypt = common.getIntegers(common.initPermutation(common.getBytes(partsToCrypt)));
 			for (int k = 0; k < 32; k ++) {
-				this.cryptRound(partsToCrypt, keys);
+				partsToCrypt = common.getIntegers(sBox(common.getBytes(partsToCrypt), k));
+				this.linearTransform(partsToCrypt, keys);
 			}
+			partsToCrypt = common.getIntegers(common.finalPermutation(common.getBytes(partsToCrypt)));
 			
 			for (int j = i; j - i < 4; j ++) {
 				encryptedText[j] = partsToCrypt[j - i];
@@ -183,11 +187,24 @@ public class Server{
 		return encryptedText;
     }
     
+    private byte[] sBox(byte[] data, int round) {
+        byte[] toUse = straightBoxes[round%8];
+        byte[] output = new byte[16];
+        for( int i = 0; i < 16; i++ ) {
+            //Break signed-ness
+            int curr = data[i]&0xFF;
+            byte low4 = (byte)(curr>>>4);
+            byte high4 = (byte)(curr&0x0F);
+            output[i] = (byte) ((toUse[low4]<<4) ^ (toUse[high4]));
+        }
+        return output;
+    }
+    
     private int getComplementedBytesLength(int length) {
     	return length + (4 - length % 4);
     }
     
-    private int[] cryptRound(int[] b, int keys[]) {
+    private int[] linearTransform(int[] b, int keys[]) {
 		for (int i = 0; i < 4; i ++) {
 			b[i] = b[i] ^ keys[i];
 		}

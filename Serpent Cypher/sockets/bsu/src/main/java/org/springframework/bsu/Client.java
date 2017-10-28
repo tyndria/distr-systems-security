@@ -43,7 +43,7 @@ public class Client {
 	}
 }
 
-class FrameAssistant extends JFrame implements ActionListener, Runnable{
+class FrameAssistant extends JFrame implements ActionListener, Runnable, SBox{
 	private static final long serialVersionUID = 1L;
 	DefaultListModel<String> messageListModel;
 	String author;
@@ -59,9 +59,10 @@ class FrameAssistant extends JFrame implements ActionListener, Runnable{
 	KeyPairGenerator keyGen;
 	KeyPair key;
 	
-	Socket clientSocket = new Socket("172.16.1.57", 8092);
+	Socket clientSocket = new Socket("192.168.100.6", 8092);
 	ObjectOutputStream outputStream = new ObjectOutputStream(clientSocket.getOutputStream());
 	ObjectInputStream inputStream = new ObjectInputStream(clientSocket.getInputStream());
+	CommonCryption common = new CommonCryption();
 	
 	public FrameAssistant(String s) throws FileNotFoundException, ClassNotFoundException, IOException {
 		super(s);
@@ -319,9 +320,12 @@ class FrameAssistant extends JFrame implements ActionListener, Runnable{
 				partsToDecrypt[j - i] = texts[j];
 			}
 			
-			for(int k = 0; k < 32; k ++) {
-				this.decryptRound(partsToDecrypt, keys);
+			partsToDecrypt = common.getIntegers(common.initPermutation(common.getBytes(partsToDecrypt)));
+			for(int k = 31; k >= 0; k --) {
+				this.linearTransform(partsToDecrypt, keys);
+				partsToDecrypt = common.getIntegers(sBoxInv(common.getBytes(partsToDecrypt), k));
 			}
+			partsToDecrypt = common.getIntegers(common.finalPermutation(common.getBytes(partsToDecrypt)));
 			
 			// Cipher feed back mode
 			for (int j = i; j - i < 4; j ++) {
@@ -340,7 +344,7 @@ class FrameAssistant extends JFrame implements ActionListener, Runnable{
 		return decryptedText;
     }
 	
-	private int[] decryptRound(int[] b, int[] keys) {
+	private int[] linearTransform(int[] b, int[] keys) {
 		b[2] = Integer.rotateRight(b[2], 22);
 		b[0] = Integer.rotateRight(b[0], 5);
 		b[2] = b[2] ^ b[3] ^ (b[1] << 7);
@@ -356,6 +360,19 @@ class FrameAssistant extends JFrame implements ActionListener, Runnable{
 		}
 		return b;
 	}
+	
+	private byte[] sBoxInv(byte[] data, int round) {
+        byte[] toUse = inverseBoxes[round%8];
+        byte[] output = new byte[16];
+        for( int i = 0; i < 16; i++ ) {
+            //Break signed-ness
+            int curr = data[i]&0xFF;
+            byte low4 = (byte)(curr>>>4);
+            byte high4 = (byte)(curr&0x0F);
+            output[i] = (byte) ((toUse[low4]<<4) ^ (toUse[high4]));
+        }
+        return output;
+    }
 	
 }
 
