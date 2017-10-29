@@ -56,16 +56,48 @@ public class EllipticGroup {
 	public List<Point> getPoints() {
 		return points;
 	}
+	
 	private boolean checkEquationParams(double a, double b) {
 		int c =  (int) (4 * Math.pow(a, 3) + 27 * Math.pow(b, 2));
 		return (c % M) != 0; 
 	}
 	
+	public Point add(Point a, Point b) {
+		int m = -1;
+		// Variant from task
+		/*if (a.equals(b)) {
+			m = (int) ((3 * Math.pow(a.x, 2) + this.a) / (2 * a.y));
+		} else {
+			m = (int) ((b.y - a.y) / (b.x - a.x));
+		}
+		m = Math.floorMod(m, M);
+		
+		int xRes = (int) (Math.pow(m, 2) - a.x - b.x);
+		int yRes = (int) (m * (a.x - xRes - a.y));*/
+		
+		if (a.equals(b)) {
+			m = (int) ((3 * Math.pow(a.x, 2) + this.a) / (2 * a.y));
+		} else {
+			m = (int) ((b.y - a.y) / (b.x - a.x));
+		}
+		
+		m = Math.floorMod(m, M);
+		
+		int xRes = (int) (Math.pow(m, 2) - a.x - b.x);
+		int yRes = (int) (a.y + m * (xRes - a.x));
+		
+		return new Point(Math.floorMod(xRes, M), Math.floorMod(yRes, M));
+	}
 }
 
 class Point {
 	double x;
 	double y;
+	
+	public Point() {
+		this.x = -1;
+		this.y = -1;
+	}
 	
 	public Point(double x, double y) {
 		this.x = x;
@@ -74,5 +106,9 @@ class Point {
 	
 	public String toString() {
 		return "(" + x + "," + y + ")";
+	}
+	
+	public boolean equals(Point a) {
+		return a.x == this.x && a.y == this.y;
 	}
 }
