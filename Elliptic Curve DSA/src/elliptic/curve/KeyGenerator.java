@@ -1,4 +1,4 @@
-package ecdsa;
+package elliptic.curve;
 
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -21,11 +21,20 @@ public class KeyGenerator {
 		return publicKey;
 	}
 	
-	public void generatePrivateKey() {
+	public int getPrivateKey() {
+		return privateKey;
+	}
+	
+	public void generateKeys() {
+		generatePrivateKey();
+		generatePublicKey();
+	}
+	
+	private void generatePrivateKey() {
 		this.privateKey = ThreadLocalRandom.current().nextInt(1, M);
 	}
 	
-	public void generatePublicKey() {
+	private void generatePublicKey() {
 		this.publicKey = group.smartMult(G, privateKey);
 	}
 	
