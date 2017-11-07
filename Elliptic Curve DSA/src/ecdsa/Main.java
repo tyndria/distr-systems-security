@@ -7,9 +7,25 @@ public class Main {
 		EllipticGroup eGroup = new EllipticGroup(M);
 		eGroup.generatedGroupElements();
 		System.out.println(eGroup.getPoints());
-		Point p1 = new Point(6, 2);
-		Point p2 = new Point(2, 3);
-		System.out.println(eGroup.add(p1, p2));
+		Point p1 = new Point(0, 1);
+		Point p2 = new Point(1, 12);
+		Point p3 = new Point(7, 29);
+		
+		Point G = new Point(2, 3);
+		
+		KeyGenerator A = new KeyGenerator(G, M, eGroup);
+		KeyGenerator B = new KeyGenerator(G, M, eGroup);
+		
+		A.generatePrivateKey();
+		A.generatePublicKey();
+		Point PA = A.getPublicKey();
+		
+		B.generatePrivateKey();
+		B.generatePublicKey();
+		Point PB = A.getPublicKey();
+		
+		A.generateCommonPrivateKey(PB);
+		B.generateCommonPrivateKey(PA);
 	}
 
 }
