@@ -1,16 +1,12 @@
 package org.springframework.bsu;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
-import java.security.KeyFactory;
 import java.security.PublicKey;
-import java.security.spec.X509EncodedKeySpec;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
@@ -79,6 +75,7 @@ public class Server{
     
     public void run() {
     	String text = "text what should be encrypted and decrypted correctly, yes";
+    	System.out.println("Text that needs to be sent");
     	String key = "";
         try {
             while (clientSocket.isConnected()) {

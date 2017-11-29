@@ -6,15 +6,11 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.net.Socket;
 import java.net.SocketException;
 import java.security.KeyPair;
@@ -25,7 +21,6 @@ import java.util.Arrays;
 import java.util.Base64;
 
 import javax.crypto.Cipher;
-import javax.swing.BorderFactory;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -45,14 +40,11 @@ public class Client {
 
 class FrameAssistant extends JFrame implements ActionListener, Runnable, SBox{
 	private static final long serialVersionUID = 1L;
-	DefaultListModel<String> messageListModel;
 	String author;
-	JList<String> messageJList;
 	JTextArea textAreaInput;
 	JButton buttonSend, buttonOk, buttonGenerateRSA;
 	Boolean isNewMessage;
-	JTextArea loginArea, passwordArea;
-	JPanel cardPanel, chatPanel, loginPanel, buttonPanel;
+	JPanel cardPanel, buttonPanel;
 	JLabel errorLabel; 
 	Font font = new Font("Verdana", Font.PLAIN, 20);
 	
@@ -72,12 +64,7 @@ class FrameAssistant extends JFrame implements ActionListener, Runnable, SBox{
 		
 		cardPanel = new JPanel(new CardLayout());
 		
-		chatPanel = new JPanel(new BorderLayout());
-		chatPanel.add(createChatViewPanel(), BorderLayout.CENTER);
-		chatPanel.add(createTextInputPanel(), BorderLayout.SOUTH);
-		
-		cardPanel.add(chatPanel);
-		
+		cardPanel.add(createTextInputPanel(), BorderLayout.CENTER);
 		buttonPanel = createButtonPanel();
 		
 		this.getContentPane().add(cardPanel);
@@ -117,35 +104,11 @@ class FrameAssistant extends JFrame implements ActionListener, Runnable, SBox{
 		return panel;
 	}
 	
-	private JPanel createChatViewPanel() {
-		JPanel panel = new JPanel();
-		
-		messageListModel = new DefaultListModel<String>();
-		messageJList = new JList<String>(messageListModel);
-		
-		messageJList.setFont(font);
-		
-		JScrollPane areaScrollPane = new JScrollPane(messageJList, 
-				JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, 
-				JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-		areaScrollPane.setPreferredSize(new Dimension(500, 350));
-		panel.add(areaScrollPane);
-		
-		return panel;
-	}
-	
 	private void generateRSAKeys() throws NoSuchAlgorithmException {
 		 keyGen = KeyPairGenerator.getInstance("RSA");
 	     keyGen.initialize(512);
 	     
 	     key = keyGen.generateKeyPair();
-	}
-	
-	private JPanel createFlowLayoutPanel(Component component) {
-		JPanel panel = new JPanel();
-		component.setFont(font);
-		panel.add(component);
-		return panel;
 	}
 	
 	private JPanel createTextInputPanel() {
@@ -228,9 +191,8 @@ class FrameAssistant extends JFrame implements ActionListener, Runnable, SBox{
 	            	    	arr = this.decrypt(this.reverseTextBlocks(arr), sessionKey);
 	            	    	bytes = this.convertToByteArray(this.reverseTextBlocks(arr));
 	            	    	int decryptedTextLength = this.parseEncryptedTextLength(new String(bytes));
-	            	    
-	            	    	System.out.println("Decrypted text: " + decryptedText.substring(0, decryptedTextLength));
-	            	    
+	            	    	
+	            	    	textAreaInput.setText(decryptedText.substring(0, decryptedTextLength));
 	            	    	break;
 	        	    }
 				}
