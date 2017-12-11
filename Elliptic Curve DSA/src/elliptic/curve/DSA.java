@@ -16,14 +16,14 @@ public class DSA {
 		this.group = g;
 		this.q = q;
 		this.G = G;
-		this.generator = new KeyGenerator(G, M, g);
+		this.generator = new KeyGenerator(G, M, g, q);
 		generator.generateKeys();
 	}
 	
 	public Entry<Integer, Integer> getSignature(String m) {
 		int privateKey = generator.getPrivateKey();
 		
-		int h = DigestUtils.getSha1Digest().hashCode();
+		int h = m.hashCode();
 		int r = 0, k = 0, s = 0;
 		while (r == 0 || s == 0) {
 			k = ThreadLocalRandom.current().nextInt(1, q - 1);
@@ -33,11 +33,12 @@ public class DSA {
 			s = (int)Math.pow(k, -1) * (h + r * privateKey);
 			s = Math.floorMod(s, q);
 		}
+		System.out.println(k + " " + r + " " + s);
 		return new AbstractMap.SimpleEntry(r, s);
 	}
 
 	public boolean certifySignature(String m, Entry<Integer, Integer> signature) {
-		int h = DigestUtils.getSha1Digest().hashCode();
+		int h = m.hashCode();
 		int r = signature.getKey();
 		int s = signature.getValue();
 		if (r >= 1 && r <= (q - 1) && s >= 1 && s <= (q - 1)) {
@@ -49,6 +50,7 @@ public class DSA {
 			Point p2 = group.smartMult(publicKey, u2);
 			Point p = group.add(p1, p2);
 			int rX = Math.floorMod((int)p.getX(), q);
+			System.out.println(rX);
 			return rX == r;
 		}
 		return false;

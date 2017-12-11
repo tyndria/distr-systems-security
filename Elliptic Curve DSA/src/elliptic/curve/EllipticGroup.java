@@ -10,6 +10,7 @@ public class EllipticGroup {
 	private int M;
 	private int a = -1;
 	private int b = -1;
+	private Point G = new Point();
 	private List<Point> points = new ArrayList<Point>();
 
 	public EllipticGroup(int M) {
@@ -22,6 +23,13 @@ public class EllipticGroup {
 		this.M = M;
 		this.a = a;
 		this.b = b;
+	}
+	
+	public EllipticGroup(int M, int a, int b, Point G) {
+		this.M = M;
+		this.a = a;
+		this.b = b;
+		this.G = G;
 	}
 	
 	private void defineEquationParams() {
@@ -47,14 +55,18 @@ public class EllipticGroup {
 	}
 	
 	public void generatedGroupElements() {
-		int x = 0;
-		while (x < M) {
+		int x = 1;
+		while (x <= M) {
 			int c = (int) Math.pow(x, 3) + this.a * x + this.b;
-			BigInteger bigSqrtModRoot = ModularArith.sqrtP(BigInteger.valueOf(c), BigInteger.valueOf((long)M));
+			int sqrtModRoot = (int)Math.sqrt(c);
+			if (mod(sqrtModRoot, M) > 0 ) {
+				points.add(new Point(x, mod(sqrtModRoot, M)));
+			}
+			/*BigInteger bigSqrtModRoot = ModularArith.sqrtP(BigInteger.valueOf(c), BigInteger.valueOf((long)M));
 			if (bigSqrtModRoot != null) {
 				Integer sqrtModRoot = bigSqrtModRoot.intValue();
 				points.add(new Point(x, sqrtModRoot.intValue()));
-			}
+			}*/
 			x ++;
 		}
 	}
@@ -64,41 +76,73 @@ public class EllipticGroup {
 	}
 	
 	private boolean checkEquationParams(double a, double b) {
-		int c =  (int) (4 * Math.pow(a, 3) + 27 * Math.pow(b, 2));
-		return Math.floorMod(c, M) != 0; 
+		int c = (int) (4 * Math.pow(a, 3) + 27 * Math.pow(b, 2));
+		return mod(c, M) > 0; 
 	}
 	
 	// Do not work yet :(
 	public Point add(Point a, Point b) {
 		int m = -1;
+		int xRes = 0;
+		int yRes = 0;
 
-		if (a.equals(b)) {
-			m = (int) ((3 * Math.pow(a.x, 2) + this.a) / (2 * a.y));
+		if (a.x == 0 && a.y == 0) {
+			xRes = (int) b.x;
+			yRes = (int) b.y;
+		} else if (b.x == 0 && b.y == 0) {
+			xRes = (int) a.x;
+			yRes = (int) a.y;
+		} else if (a.x == b.x && a.y == mod((int)-b.y, M)) {
+			xRes = 0;
+			yRes = 0;
+		} else if (a.equals(b)) {
+			if (a.y == 0) {
+				xRes = 0;
+				yRes = 0;
+			} else {
+				m = (int) (((3 * Math.pow(a.x, 2) + this.a)) / (2 * a.y));
+				m = mod(m, M);
+				
+				xRes = (int) (Math.pow(m, 2) - a.x - b.x);
+				yRes = (int) (m * (a.x - xRes) - a.y);
+				
+				xRes = mod(xRes, M);
+				yRes = mod(yRes, M);
+			}
 		} else {
-			m = (int) ((a.y - b.y) / (a.x - b.x));
+			m = (int) ((b.y - a.y) / (b.x - a.x));
+			m = mod(m, M);
+			
+			xRes = (int) (Math.pow(m, 2) - a.x - b.x);
+			yRes = (int) (m * (a.x - xRes) - a.y);
+			
+			xRes = mod(xRes, M);
+			yRes = mod(yRes, M);
 		}
 		
-		m = Math.floorMod(m, M);
-		
-		int xRes = (int) (Math.pow(m, 2) - a.x - b.x);
-		int yRes = (int) (a.y + m * (xRes - a.x));
-		
-		return new Point(Math.floorMod(xRes, M), Math.floorMod(yRes, M));
+		return new Point(xRes, yRes);
 	}
 	
 	public Point smartMult(Point a, int n) {
-		String bits = new StringBuilder(Integer.toBinaryString(n)).reverse().toString();
-		Point result = null;
+		String bits = new StringBuilder(Integer.toBinaryString(n)).toString();
 		Point current = a;
 		
-		for (int i = 0; i < bits.length(); i ++) {
-			if (bits.charAt(i) == '1') {
-				result = result == null ? current : this.add(result, current);
-			}
+		for (int i = 2; i < bits.length(); i ++) {
 			current = this.add(current, current);
+			if (bits.charAt(i) == '1') {
+				if (a.x == current.x && a.y == current.y) {
+					current = this.add(current, current);
+				} else {
+					current = this.add(a, current);
+				}
+			}
 		}
 		
-		return result;
+		return current;
+	}
+	
+	private int mod(int x, int y) {
+		return Math.floorMod(x, y);
 	}
 }
 

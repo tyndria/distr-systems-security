@@ -5,22 +5,19 @@ import java.util.Map.Entry;
 public class Main {
 
 	public static void main(String[] args) {
-		int M = 71;
-		EllipticGroup eGroup = new EllipticGroup(M);
-		eGroup.generatedGroupElements();
-		System.out.println(eGroup.getPoints());
-		Point p1 = new Point(2, 3);
-		Point p2 = new Point(0, 1);
-		Point p3 = new Point(7, 29);
-		System.out.println(eGroup.add(p1, p2));
+		int M = 211;
+		int a = 0;
+		int b = -4;
+		int q = 241;
+		Point G = new Point(2, 2);
+		EllipticGroup eGroup = new EllipticGroup(M, a, b, G);
 		
-		Point G = new Point(2, 3);
-		
-		KeyGenerator A = new KeyGenerator(G, M, eGroup);
-		KeyGenerator B = new KeyGenerator(G, M, eGroup);
+		KeyGenerator A = new KeyGenerator(G, M, eGroup, q);
+		KeyGenerator B = new KeyGenerator(G, M, eGroup, q);
 		
 		A.generateKeys();
 		Point PA = A.getPublicKey();
+		//System.out.println(PA);
 		
 		B.generateKeys();
 		Point PB = A.getPublicKey();
@@ -29,7 +26,6 @@ public class Main {
 		B.generateCommonPrivateKey(PA);
 		
 		// Not working yet :(
-		int q = 5;
 		String helloWorld = "hello, world!";
 		DSA dsa = new DSA(eGroup, M, G, q);
 		Entry<Integer, Integer> signature = dsa.getSignature(helloWorld);
