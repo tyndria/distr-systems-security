@@ -40,12 +40,9 @@ public class Client {
 
 class FrameAssistant extends JFrame implements ActionListener, Runnable, SBox{
 	private static final long serialVersionUID = 1L;
-	String author;
 	JTextArea textAreaInput;
-	JButton buttonSend, buttonOk, buttonGenerateRSA;
-	Boolean isNewMessage;
+	JButton requestTextBtn;
 	JPanel cardPanel, buttonPanel;
-	JLabel errorLabel; 
 	Font font = new Font("Verdana", Font.PLAIN, 20);
 	
 	KeyPairGenerator keyGen;
@@ -59,16 +56,11 @@ class FrameAssistant extends JFrame implements ActionListener, Runnable, SBox{
 	public FrameAssistant(String s) throws FileNotFoundException, ClassNotFoundException, IOException {
 		super(s);
 		
-		errorLabel = new JLabel("Error");
-		errorLabel.setFont(font);
-		
 		cardPanel = new JPanel(new CardLayout());
 		
 		cardPanel.add(createTextInputPanel(), BorderLayout.CENTER);
-		buttonPanel = createButtonPanel();
 		
 		this.getContentPane().add(cardPanel);
-		this.getContentPane().add(buttonPanel, BorderLayout.NORTH);
 		
 		this.setSize(700, 500);
 		this.setVisible(true);
@@ -92,18 +84,6 @@ class FrameAssistant extends JFrame implements ActionListener, Runnable, SBox{
 		});
 	}
 	
-	private JPanel createButtonPanel() {
-		JPanel panel= new JPanel();
-		
-		buttonGenerateRSA = new JButton("Generate RSA");
-		buttonGenerateRSA.setFont(font);
-		buttonGenerateRSA.addActionListener(this);
-		
-		panel.add(buttonGenerateRSA);
-		
-		return panel;
-	}
-	
 	private void generateRSAKeys() throws NoSuchAlgorithmException {
 		 keyGen = KeyPairGenerator.getInstance("RSA");
 	     keyGen.initialize(512);
@@ -114,53 +94,43 @@ class FrameAssistant extends JFrame implements ActionListener, Runnable, SBox{
 	private JPanel createTextInputPanel() {
 		JPanel panel = new JPanel();
 		
-		textAreaInput = new JTextArea(1, 15);
+		textAreaInput = new JTextArea(100, 50);
 		
 		JScrollPane areaScrollPane = new JScrollPane(textAreaInput, 
 				JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, 
-				JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-		areaScrollPane.setPreferredSize(new Dimension(433, 50));
+				JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+		areaScrollPane.setPreferredSize(new Dimension(433, 400));
 		
+		textAreaInput.setLineWrap(true);
 		textAreaInput.setFont(font);
 		
-		buttonSend = new JButton("Request Text");
-		buttonSend.addActionListener(this);
+		requestTextBtn = new JButton("Request Text");
+		requestTextBtn.addActionListener(this);
 		
 		panel.add(areaScrollPane);
-		panel.add(buttonSend);
+		panel.add(requestTextBtn);
 		
 		return panel;
 	}
 	
 	
 	public void actionPerformed(ActionEvent e) {
-		CardLayout cl = (CardLayout)(cardPanel.getLayout());
-		if(e.getSource() == buttonSend) {
+		if(e.getSource() == requestTextBtn) {
 			try {
-				outputStream.writeByte(1);
-				outputStream.flush();
-			} catch (SocketException e1) {
-				textAreaInput.setText("Server was closed");
-			} catch (IOException e1) {
-				System.out.println(e1.getMessage());
-			}
-		} else if(e.getSource() == buttonGenerateRSA) {
-			try {
+				textAreaInput.setText("");
 				this.generateRSAKeys();
 				Message message = new Message("", key.getPublic());
 				outputStream.writeByte(0);
 				outputStream.writeObject(message);
 				outputStream.flush();
-				textAreaInput.setText("");
 			} catch (SocketException e1) {
 				textAreaInput.setText("Server was closed");
 			} catch (IOException e1) {
 				System.out.println(e1.getMessage());
 			} catch (NoSuchAlgorithmException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
+				System.out.println(e1.getMessage());
 			}
-		}
+		} 
 	}
 
 	public void run() {
@@ -175,6 +145,10 @@ class FrameAssistant extends JFrame implements ActionListener, Runnable, SBox{
 	            	    	byte[] encryptedSessionKey = Base64.getDecoder().decode(inputStream.readUTF());
 	            	    	sessionKey = this.decryptSessionKey(encryptedSessionKey, key.getPrivate());
 	            	    	System.out.println("Descrypted session key: " + sessionKey);
+	            	    	
+	            	    	// Send text-request flag
+	            	    	outputStream.writeByte(1);
+	        				outputStream.flush();
 	            	    	break;
 	            	    case 1: // Receive encrypted text and text length
 	            	    	Message message = (Message)inputStream.readObject();
@@ -203,8 +177,7 @@ class FrameAssistant extends JFrame implements ActionListener, Runnable, SBox{
 			} catch(IOException e) {
 				System.out.println("Stream was closed");
 			} catch (ClassNotFoundException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				System.out.println(e.getMessage());
 			}
 		}
 	}

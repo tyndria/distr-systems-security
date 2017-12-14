@@ -74,7 +74,7 @@ public class Server{
     }
     
     public void run() {
-    	String text = "text what should be encrypted and decrypted correctly, yes";
+    	String text = "text that should be encrypted and decrypted correctly, yes";
     	System.out.println("Text that needs to be sent");
     	String key = "";
         try {
@@ -105,10 +105,9 @@ public class Server{
             	  }
             }
         } catch (IOException e) {
-            System.out.println(e.toString());
+            System.out.println(e.getMessage());
         } catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+        	 System.out.println(e.getMessage());
 		} finally {
             System.out.println("user disconnected from " + clientSocket.getInetAddress().toString());
         }
